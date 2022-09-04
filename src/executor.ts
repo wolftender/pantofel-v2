@@ -1,6 +1,6 @@
 /*
  * executor.ts
- * command and button interaction framework
+ * base classes for command executors
  */
 
 import { SlashCommandBuilder } from "@discordjs/builders";
