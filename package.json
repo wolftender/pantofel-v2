@@ -1,0 +1,33 @@
+{
+    "name": "pantofel-v2",
+    "version": "1.0.0",
+    "description": "cudowny bot muzyczny",
+    "main": "index.js",
+    "scripts": {
+        "dev": "ts-node src/main.ts"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/wolftender/pantofel-v2.git"
+    },
+    "author": "eden (kasztan krol inc)",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/wolftender/pantofel-v2/issues"
+    },
+    "homepage": "https://github.com/wolftender/pantofel-v2#readme",
+    "devDependencies": {
+        "prisma": "^3.15.2",
+        "ts-node": "^10.8.1",
+        "typescript": "^4.7.4"
+    },
+    "dependencies": {
+        "@discordjs/builders": "^1.2.0",
+        "@discordjs/rest": "^1.1.0",
+        "@prisma/client": "^3.15.2",
+        "discord-api-types": "^0.37.5",
+        "discord.js": "^14.3.0",
+        "dotenv": "^16.0.1",
+        "reflect-metadata": "^0.1.13"
+    }
+}
