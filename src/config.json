@@ -1,0 +1,15 @@
+{
+    "discord": {
+        "status": "pantofel"
+    },
+
+    "storage": {
+        "type": "local",
+        "directory": "./music"
+    },
+
+    "logger": {
+        "logDirectory": "./logs",
+        "level": 0
+    }
+}
