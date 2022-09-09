@@ -48,7 +48,7 @@ export class DiscordService extends Logging {
             // initialize command manager and build commands (if asked to by the config)
             this.m_commandManager = new CommandManager ();
             if (config.commands.register && this.m_client.user) {
-                await this.m_commandManager.buildCommands (this.m_client.user.id);
+                await this.m_commandManager.buildCommands (this.m_client.user.id, this.m_client.guilds);
             }
         });
 

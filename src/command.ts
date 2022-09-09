@@ -10,7 +10,7 @@ import type { CommandExecutor } from "./executor";
 
 import * as config from './config.json';
 import { RESTPostAPIApplicationCommandsJSONBody, Routes } from 'discord-api-types/v10';
-import type { ButtonInteraction, Client, CommandInteraction } from 'discord.js';
+import type { ButtonInteraction, Client, CommandInteraction, GuildManager } from 'discord.js';
 
 const commandHandlers : Array <new(...args: {}[]) => CommandExecutor> = [];
 
@@ -114,7 +114,7 @@ export class CommandManager extends Logging {
         }
     }
 
-    public async buildCommands (clientId : string) : Promise <void> {
+    public async buildCommands (clientId : string, guildManager: GuildManager) : Promise <void> {
         const token : string = process.env.DISCORD_TOKEN ? process.env.DISCORD_TOKEN : '';
         const rest : REST = new REST ({ version: '10' }).setToken (token);
 
@@ -133,7 +133,8 @@ export class CommandManager extends Logging {
                 await this.wait (5000);
                 await rest.put (Routes.applicationCommands (clientId), { body: commands })
             } else {
-                for (const guildId of config.commands.guildIds) {
+                const guilds = await guildManager.fetch ();
+                for (const [guildId] of guilds) {
                     this.info (`registering commands for guild ${guildId}`);
                     await rest.put (Routes.applicationGuildCommands (clientId, guildId), { body: commands });
                 }

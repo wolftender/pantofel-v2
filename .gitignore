@@ -7,3 +7,5 @@ Thumbs.db
 
 # prisma migrations
 prisma/migrations/*
+
+package-lock.json

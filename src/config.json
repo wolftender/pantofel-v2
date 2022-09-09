@@ -6,7 +6,6 @@
     "commands": {
         "register": true,
         "globalCommands": false,
-        "guildIds": [ "339891705815760896" ],
         "displayErrorStack": true
     },
 
