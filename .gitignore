@@ -7,3 +7,6 @@ Thumbs.db
 
 # prisma migrations
 prisma/migrations/*
+
+# static files
+static/

@@ -10,6 +10,15 @@
         "displayErrorStack": true
     },
 
+    "web": {
+        "port": 3000,
+        "static": "./static",
+        "ssl": {
+            "cert": "./ssl/cert.pem",
+            "key": "./ssl/key.pem"
+        }
+    },
+
     "storage": {
         "type": "local",
         "directory": "./music"
