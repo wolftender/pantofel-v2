@@ -10,7 +10,8 @@ import type { CommandExecutor } from "./executor";
 
 import * as config from './config.json';
 import { RESTPostAPIApplicationCommandsJSONBody, Routes } from 'discord-api-types/v10';
-import type { ButtonInteraction, Client, CommandInteraction, GuildManager } from 'discord.js';
+import type { AutocompleteInteraction, ButtonInteraction, ChatInputCommandInteraction, Client, GuildManager } from 'discord.js';
+import { Util } from './util';
 
 const commandHandlers : Array <new(...args: {}[]) => CommandExecutor> = [];
 
@@ -22,10 +23,6 @@ export function CommandHandler () {
 
 export class CommandManager extends Logging {
     private m_commands : Map <string, CommandExecutor>;
-
-    private wait (miliseconds : number) : Promise <void> {
-        return new Promise <void> ((resolve) => setTimeout (resolve, miliseconds));
-    }
 
     public constructor () {
         super ();
@@ -66,7 +63,7 @@ export class CommandManager extends Logging {
         }
     }
 
-    public async handleCommand (client : Client, interaction : CommandInteraction) {
+    public async handleCommand (client : Client, interaction : ChatInputCommandInteraction) {
         const commandName : string = interaction.commandName;
         const handler : CommandExecutor | undefined = this.m_commands.get (commandName);
 
@@ -114,6 +111,29 @@ export class CommandManager extends Logging {
         }
     }
 
+    public async handleAutocomplete (client : Client, interaction : AutocompleteInteraction) {
+        const commandName : string = interaction.commandName;
+        const handler : CommandExecutor | undefined = this.m_commands.get (commandName);
+
+        if (handler) {
+            try {
+                await handler.autocomplete (client, interaction);
+            } catch (err : any) {
+                this.error (`failed to execute command ${commandName}`);
+                this.error (err as string);
+
+                if (config.commands.displayErrorStack) {
+                    this.error (err.stack);
+                }
+
+                await interaction.respond([]);
+            }
+        } else {
+            this.error (`received command ${commandName} but a handler was not found`);
+            await interaction.respond([]);
+        }
+    }
+
     public async buildCommands (clientId : string, guildManager: GuildManager) : Promise <void> {
         const token : string = process.env.DISCORD_TOKEN ? process.env.DISCORD_TOKEN : '';
         const rest : REST = new REST ({ version: '10' }).setToken (token);
@@ -130,7 +150,7 @@ export class CommandManager extends Logging {
                 this.warning ('command registration is set to GLOBAL');
                 this.warning ('the registration process will commence in 5 seconds, terminate the program to stop');
 
-                await this.wait (5000);
+                await Util.wait (5000);
                 await rest.put (Routes.applicationCommands (clientId), { body: commands })
             } else {
                 const guilds = await guildManager.fetch ();

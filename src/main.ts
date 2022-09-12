@@ -8,7 +8,9 @@ dotenv.config ();
 import config from './config.json';
 
 // services
+import './services/database.ts';
 import './services/discord.ts';
+import './services/playlist.ts';
 import './services/web.ts';
 
 export class Pantofel extends Logging {
@@ -16,5 +18,9 @@ export class Pantofel extends Logging {
         this.log (LogLevel.INFO, "starting the bot...");
     }
 }
+
+import './commands/songinfo';
+import './commands/register';
+import './commands/skip';
 
 Pantofel.run ();

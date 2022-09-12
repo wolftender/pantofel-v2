@@ -9,9 +9,14 @@
         "displayErrorStack": true
     },
 
+    "player": {
+        "rejoinDelay": 3000
+    },
+
     "storage": {
         "type": "local",
-        "directory": "./music"
+        "musicDirectory": "./music",
+        "announcerDirectory": "./announcers"
     },
 
     "logger": {

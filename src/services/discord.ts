@@ -3,21 +3,15 @@
  * service that runs the discord bot account
  */
 
-import { ActivityOptions, ActivityType, ButtonInteraction, Client, ClientOptions, CommandInteraction, GatewayIntentBits, Interaction } from "discord.js";
-import { Logging, LogLevel } from "../logger";
-import { Autowired, Service } from "../service";
-import { DatabaseService } from "./database";
+import { ActivityOptions, ActivityType, AutocompleteInteraction, ButtonInteraction, ChatInputCommandInteraction, Client, ClientOptions, CommandInteraction, GatewayIntentBits, Interaction, VoiceChannel, VoiceState } from "discord.js";
+import { Logging } from "../logger";
+import { Service } from "../service";
 
 import config from '../config.json';
 import { CommandManager } from "../command";
 
-import '../commands/songinfo';
-
 @Service ()
 export class DiscordService extends Logging {
-    @Autowired ()
-    private m_databaseService! : DatabaseService;
-
     // discord client
     private m_client : Client;
     private m_commandManager! : CommandManager;
@@ -30,7 +24,8 @@ export class DiscordService extends Logging {
         this.m_client = new Client ({
             intents: [
                 GatewayIntentBits.GuildMessages,
-                GatewayIntentBits.Guilds
+                GatewayIntentBits.Guilds,
+                GatewayIntentBits.GuildVoiceStates
             ]
         } as ClientOptions);
 
@@ -50,18 +45,33 @@ export class DiscordService extends Logging {
             if (config.commands.register && this.m_client.user) {
                 await this.m_commandManager.buildCommands (this.m_client.user.id, this.m_client.guilds);
             }
+
+            for (const guild of await this.m_client.guilds.fetch()) {
+               
+            }
+
+            const channel = await this.m_client.channels.fetch ('964890696391745616');
+            if (channel !== null && channel instanceof VoiceChannel) {
+                // this.m_playlistService.connect (channel);
+            }
         });
 
         this.m_client.on ("interactionCreate", async (interaction : Interaction) => {
-            if (interaction.isCommand ()) {
+            if (interaction.isChatInputCommand ()) {
                 this.info (`received command ${interaction.commandName} from ${interaction.user.id}`);
-                this.m_commandManager.handleCommand (this.m_client, interaction as CommandInteraction);
+                this.m_commandManager.handleCommand (this.m_client, interaction as ChatInputCommandInteraction);
             } else if (interaction.isButton ()) {
                 this.info (`received button ${interaction.customId} from ${interaction.user.id}`);
                 this.m_commandManager.handleButton (this.m_client, interaction as ButtonInteraction);
+            } else if (interaction.isAutocomplete ()) {
+                this.m_commandManager.handleAutocomplete (this.m_client, interaction as AutocompleteInteraction);
             }
         });
 
         this.m_client.login (process.env.DISCORD_TOKEN);
+    }
+
+    public get client () {
+        return this.m_client;
     }
 }

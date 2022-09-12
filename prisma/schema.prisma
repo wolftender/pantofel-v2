@@ -2,19 +2,51 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider          = "mysql"
-    url               = env("DATABASE_URL")
-    shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+  provider          = "mysql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+model Guild {
+  guildId      String  @id
+  voiceChId    String
+  skipRoleId   String?
+}
+
+model User {
+  userId       String       @id
+  bannedUntil  DateTime?
+  songs        Song[]
+  ratings      SongRating[]
 }
 
 model Song {
-    id      Int       @id @default(autoincrement())
-    title   String
-    artist  String
-    userId  String
-    added   DateTime  @default(now())
+  songId     Int          @id @default(autoincrement())
+  title      String
+  artist     String
+  artworkUrl String?
+  userId     String
+  added      DateTime     @default(now())
+  user       User         @relation(fields: [userId], references: [userId])
+  ratings    SongRating[]
+}
+
+model SongRating {
+  songId Int
+  userId String
+  rating SongRatingValue
+  song   Song            @relation(fields: [songId], references: [songId])
+  user   User            @relation(fields: [userId], references: [userId])
+
+  @@id([songId, userId])
+}
+
+enum SongRatingValue {
+  LIKE
+  NEUTRAL
+  DISLIKE
 }

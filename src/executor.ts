@@ -4,7 +4,7 @@
  */
 
 import { SlashCommandBuilder } from "@discordjs/builders";
-import type { ButtonInteraction, Client, CommandInteraction } from "discord.js";
+import type { AutocompleteInteraction, ButtonInteraction, ChatInputCommandInteraction, Client } from "discord.js";
 
 import { Logging } from "./logger";
 
@@ -35,12 +35,16 @@ export abstract class CommandExecutor extends Logging {
         return builder;
     }
 
-    public async command (client : Client, interaction : CommandInteraction) : Promise<void> {
+    public async command (client : Client, interaction : ChatInputCommandInteraction) : Promise<void> {
         throw new Error ("this command is not implemented");
     }
 
     public async button (id : string, client : Client, interaction : ButtonInteraction) : Promise<void> {
         throw new Error ("this button is not implemented");
+    }
+
+    public async autocomplete (client : Client, interaction : AutocompleteInteraction) : Promise<void> {
+        throw new Error ("this autocomplete is not implemented");
     }
 }
 
