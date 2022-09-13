@@ -13,12 +13,12 @@ datasource db {
 
 model Guild {
   guildId      String  @id
-  voiceChId    String
-  skipRoleId   String?
+  channelId    String
 }
 
 model User {
   userId       String       @id
+  canForceSkip Boolean      @default(false)
   bannedUntil  DateTime?
   songs        Song[]
   ratings      SongRating[]

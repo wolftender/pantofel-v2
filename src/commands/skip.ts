@@ -9,6 +9,7 @@ import { CommandExecutor } from "../executor";
 import { Autowired } from "../service";
 import { DatabaseService } from "../services/database";
 import { PlaylistService } from "../services/playlist";
+import { Util } from "../util";
 
 @CommandHandler ()
 class SkipCommand extends CommandExecutor {
@@ -37,7 +38,10 @@ class SkipCommand extends CommandExecutor {
                 }
             });
             if (song !== null) {
-                await interaction.reply (`${song.artist} - ${song.title} skipped`)
+                const embed = Util.songEmbed (song)
+                    .setColor ([255, 103, 72])
+                    .setDescription ('Skipped');
+                await interaction.reply ({ embeds: [embed] })
             } else {
                 await interaction.reply ('Song skipped');
             }

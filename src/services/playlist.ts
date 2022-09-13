@@ -7,7 +7,7 @@ import { Logging } from "../logger";
 import { Autowired, Service } from "../service";
 import { DiscordService } from "./discord";
 import { DatabaseService } from "./database";
-import { joinVoiceChannel, VoiceConnectionStatus, createAudioPlayer, AudioPlayer, NoSubscriberBehavior, createAudioResource, AudioPlayerStatus, AudioResource, getVoiceConnection, VoiceConnection, PlayerSubscription, getVoiceConnections, entersState } from '@discordjs/voice';
+import { joinVoiceChannel, VoiceConnectionStatus, createAudioPlayer, AudioPlayer, NoSubscriberBehavior, createAudioResource, AudioPlayerStatus, AudioResource, getVoiceConnection, VoiceConnection, PlayerSubscription, getVoiceConnections, entersState, AudioPlayerState, AudioPlayerIdleState } from '@discordjs/voice';
 import { Collection, VoiceChannel, VoiceState } from "discord.js";
 
 import config from '../config.json';
@@ -24,6 +24,7 @@ export class PlaylistService extends Logging {
 
     private m_audioPlayer : AudioPlayer;
 
+    private m_songCount : number;
     private m_playlist : number[];
     private m_nowPlaying : number | null;
 
@@ -57,6 +58,7 @@ export class PlaylistService extends Logging {
             this.play ();
         });
 
+        this.m_songCount = 0;
         this.m_playlist = [];
         this.m_nowPlaying = null;
 
@@ -73,6 +75,7 @@ export class PlaylistService extends Logging {
                 songId: true
             }
         })).map (song => song.songId);
+        this.m_songCount = this.m_playlist.length;
         Util.shuffle(this.m_playlist);
         this.info (`playlist shuffled: ${this.m_playlist.length} songs`);
     }
@@ -82,12 +85,11 @@ export class PlaylistService extends Logging {
     }
 
     public async play (): Promise<void> {
-        if (this.m_playlist.length === 0) {
-            await this.shuffle ();
-        }
-
         let resource : AudioResource;
         if (this.m_announcement) {
+            if (this.m_playlist.length === 0) {
+                await this.shuffle ();
+            }
             const songId = this.m_playlist.shift();
             if (songId === undefined) {
                 this.error ('playlist is empty');
@@ -96,7 +98,7 @@ export class PlaylistService extends Logging {
             this.m_nowPlaying = songId;
             resource = createAudioResource (`${config.storage.announcerDirectory}/${Util.randomArrayElement (this.m_announcers)}`);
 
-            this.info (`announcing ${config.storage.musicDirectory}/${this.m_nowPlaying}.opus`);
+            this.info (`announcing ${this.m_nowPlaying}.opus`);
         } else {
             resource = createAudioResource (`${config.storage.musicDirectory}/${this.m_nowPlaying}.opus`);
         }
@@ -111,6 +113,7 @@ export class PlaylistService extends Logging {
             });
             if (song !== null) {
                 const embed = Util.songEmbed (song);
+                embed.setFooter({ text: `${this.m_songCount - this.m_playlist.length}/${this.m_songCount}` });
                 const channels = await this.fetchAllChannels ();
                 for (const channel of channels) {
                     channel.send ({ embeds: [embed] });
@@ -184,7 +187,7 @@ export class PlaylistService extends Logging {
         for (const dbGuild of guilds) {
             try {
                 const guild = await this.m_discordService.client.guilds.fetch (dbGuild.guildId);
-                const channel = await guild.channels.fetch (dbGuild.voiceChId);
+                const channel = await guild.channels.fetch (dbGuild.channelId);
                 if (channel instanceof VoiceChannel) {
                     res.push (channel);
                 }
@@ -209,5 +212,14 @@ export class PlaylistService extends Logging {
     public skip () : void {
         this.m_announcement = true;
         this.m_audioPlayer.stop ();
+    }
+
+    public addSong (songId: number) : void {
+        this.m_playlist.unshift (songId);
+        this.m_songCount++;
+
+        if (this.m_songCount === 1) {
+            this.play ();
+        }
     }
 }

@@ -39,7 +39,6 @@ class Register extends CommandExecutor {
 
     public async command (client : Client, interaction : ChatInputCommandInteraction) : Promise<void> {
         const channel = interaction.options.getChannel('channel', true) as VoiceChannel;
-        const role = interaction.options.getRole('role') as Role | null;
         const guildId = interaction.guildId;
         
         if (guildId !== null) {
@@ -48,13 +47,11 @@ class Register extends CommandExecutor {
                     guildId
                 },
                 update: {
-                    voiceChId: channel.id,
-                    skipRoleId: role?.id
+                    channelId: channel.id,
                 },
                 create: {
                     guildId,
-                    voiceChId: channel.id,
-                    skipRoleId: role?.id
+                    channelId: channel.id,
                 }
             });
             await interaction.reply (`Attached to <#${channel.id}>`);
