@@ -7,12 +7,13 @@ import { Logging } from "../logger";
 import { Autowired, Service } from "../service";
 import { DiscordService } from "./discord";
 import { DatabaseService } from "./database";
-import { joinVoiceChannel, VoiceConnectionStatus, createAudioPlayer, AudioPlayer, NoSubscriberBehavior, createAudioResource, AudioPlayerStatus, AudioResource, getVoiceConnection, VoiceConnection, PlayerSubscription, getVoiceConnections, entersState, AudioPlayerState, AudioPlayerIdleState } from '@discordjs/voice';
+import { joinVoiceChannel, VoiceConnectionStatus, createAudioPlayer, AudioPlayer, NoSubscriberBehavior, createAudioResource, AudioPlayerStatus, AudioResource, getVoiceConnection, VoiceConnection, PlayerSubscription, entersState } from '@discordjs/voice';
 import { Collection, VoiceChannel, VoiceState } from "discord.js";
 
 import config from '../config.json';
 import { Util } from "../util";
 import fs from 'fs';
+import type { Song } from "@prisma/client";
 
 @Service ()
 export class PlaylistService extends Logging {
@@ -26,7 +27,8 @@ export class PlaylistService extends Logging {
 
     private m_songCount : number;
     private m_playlist : number[];
-    private m_nowPlaying : number | null;
+    private m_skipVotes : Set<String>;
+    private m_nowPlaying : Song | null;
 
     private m_announcement : boolean;
     private m_announcers : string[];
@@ -60,10 +62,15 @@ export class PlaylistService extends Logging {
 
         this.m_songCount = 0;
         this.m_playlist = [];
+        this.m_skipVotes = new Set ();
         this.m_nowPlaying = null;
 
         this.m_announcement = false;
         this.m_announcers = fs.readdirSync (`${config.storage.announcerDirectory}`);
+
+        if (this.m_announcers.length === 0) {
+            throw new Error ('Announcers missing');
+        }
 
         this.m_subscriptions = new Collection ();
 
@@ -95,24 +102,25 @@ export class PlaylistService extends Logging {
                 this.error ('playlist is empty');
                 return;
             }
-            this.m_nowPlaying = songId;
+            const song = await this.m_databaseService.client.song.findUnique({
+                where: {
+                    songId
+                }
+            });
+            this.m_skipVotes = new Set ();
+            this.m_nowPlaying = song;
             resource = createAudioResource (`${config.storage.announcerDirectory}/${Util.randomArrayElement (this.m_announcers)}`);
 
-            this.info (`announcing ${this.m_nowPlaying}.opus`);
+            this.info (`announcing ${this.m_nowPlaying?.songId}.opus`);
         } else {
-            resource = createAudioResource (`${config.storage.musicDirectory}/${this.m_nowPlaying}.opus`);
+            resource = createAudioResource (`${config.storage.musicDirectory}/${this.m_nowPlaying?.songId}.opus`);
         }
 
         this.m_audioPlayer.play(resource);
 
         if (this.m_announcement) {
-            const song = await this.m_databaseService.client.song.findUnique({
-                where: {
-                    songId: this.m_nowPlaying!
-                }
-            });
-            if (song !== null) {
-                const embed = Util.songEmbed (song);
+            if (this.m_nowPlaying !== null) {
+                const embed = Util.songEmbed (this.m_nowPlaying);
                 embed.setFooter({ text: `${this.m_songCount - this.m_playlist.length}/${this.m_songCount}` });
                 const channels = await this.fetchAllChannels ();
                 for (const channel of channels) {
@@ -205,13 +213,48 @@ export class PlaylistService extends Logging {
         }
     }
 
-    public getCurrentSongId () : number | null {
+    public getCurrentSong () : Song | null {
         return this.m_nowPlaying;
     }
 
-    public skip () : void {
-        this.m_announcement = true;
-        this.m_audioPlayer.stop ();
+    /**
+     * @returns `true` if the song has been skipped successfully
+     */
+    public skipCurrentSong () : boolean {
+        const song = this.getCurrentSong ();
+        if (song === null) {
+            return false;
+        } else {
+            this.m_announcement = true;
+            this.m_skipVotes.clear ();
+            return this.m_audioPlayer.stop ();
+        }
+    }
+
+    /**
+     * @returns `true` if the number of votes has reached the skip threshold
+     */
+    public async voteSkip (userId: string) : Promise<[number, number]> {
+        const song = this.getCurrentSong ();
+
+        if (song === null) {
+            return [0, 0];
+        }
+
+        const channels = await this.fetchAllChannels ();
+
+        let userCount = 0;
+        for (const channel of channels) {
+            userCount += channel.members.size;
+        }
+
+        if (this.m_skipVotes.has (userId)) {
+            this.m_skipVotes.delete (userId);
+        } else {
+            this.m_skipVotes.add (userId);
+        }
+
+        return [this.m_skipVotes.size, userCount];
     }
 
     public addSong (songId: number) : void {

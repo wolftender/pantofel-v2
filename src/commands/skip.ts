@@ -1,6 +1,6 @@
 /*
- * commands/songinfo.ts
- * get information about a song
+ * commands/skip.ts
+ * skip the current song
  */
 
 import type { ChatInputCommandInteraction, Client, SlashCommandBuilder } from "discord.js";
@@ -21,32 +21,53 @@ class SkipCommand extends CommandExecutor {
 
 
     public constructor () {
-        super ('skip', 'force skip the current song');
+        super ('skip', 'skip the current song')
     }
 
     public build () : SlashCommandBuilder {
-        return (super.build ()) as SlashCommandBuilder;
+        return (super.build ()
+            .addBooleanOption(option => option
+                .setName ('force')
+                .setDescription ('force skip without voting (requires special privileges')
+                .setRequired (false))
+        ) as SlashCommandBuilder;
     }
 
     public async command (client : Client, interaction : ChatInputCommandInteraction) : Promise<void> {     
-        const songId = this.m_playlistService.getCurrentSongId (); 
-        if (songId !== null) {
-            this.m_playlistService.skip ();
-            const song = await this.m_databaseService.client.song.findUnique ({
+        const song = this.m_playlistService.getCurrentSong (); 
+        const force = interaction.options.getBoolean ('force') ?? false;
+        const userId = interaction.user.id;
+
+        if (song !== null) {  
+            const user = await this.m_databaseService.client.user.findUnique ({
                 where: {
-                    songId
+                    userId
                 }
             });
-            if (song !== null) {
-                const embed = Util.songEmbed (song)
-                    .setColor ([255, 103, 72])
-                    .setDescription ('Skipped');
-                await interaction.reply ({ embeds: [embed] })
+
+            if (force && user !== null && user.canForceSkip) {
+                if (this.m_playlistService.skipCurrentSong ()) {
+                    const embed = Util.songEmbed (song)
+                        .setColor ([255, 103, 72])
+                        .setDescription ('Force skipped');
+                    await interaction.reply ({ embeds: [embed] });
+                } else {
+                    await interaction.reply ({ content: 'Failed to skip the song', ephemeral: true });
+                }
             } else {
-                await interaction.reply ('Song skipped');
+                const [voteCount, userCount] = await this.m_playlistService.voteSkip (userId);
+                if (voteCount > userCount / 2) {
+                    this.m_playlistService.skipCurrentSong ()
+                    const embed = Util.songEmbed (song)
+                        .setColor ([255, 103, 72])
+                        .setDescription ('Vote skipped');
+                    await interaction.reply ({ embeds: [embed] });
+                } else {
+                    await interaction.reply (`${voteCount}/${Math.ceil (userCount / 2)}`);
+                }
             }
         } else {
-            await interaction.reply ('Nothing is being played');
+            await interaction.reply ({ content: 'Nothing is being played', ephemeral: true });
         }
     }
 }

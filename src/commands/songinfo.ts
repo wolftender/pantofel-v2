@@ -3,6 +3,7 @@
  * get information about a song
  */
 
+import type { Song } from "@prisma/client";
 import type { AutocompleteInteraction, ChatInputCommandInteraction, Client, SlashCommandBuilder } from "discord.js";
 import { CommandHandler } from "../command";
 import { CommandExecutor } from "../executor";
@@ -34,22 +35,26 @@ class SongInfoCommand extends CommandExecutor {
     }
 
     public async command (client : Client, interaction : ChatInputCommandInteraction) : Promise<void> {
-        const songId = interaction.options.getNumber('song') ?? this.m_playlistService.getCurrentSongId();
+        const songId = interaction.options.getNumber('song');
         
-        if (songId) {
+        if (songId !== null) {
             const song = await this.m_databaseService.client.song.findUnique ({
                 where: {
                     songId
                 }
             });
-
-            if (song) {
+            if (song !== null) {
                 await interaction.reply ( { embeds: [Util.songEmbed (song)] } )
             } else {
-                await interaction.reply ('This song does not exist in the database.');
+                await interaction.reply ( { content: 'This song does not exist in the database.', ephemeral: true } );
             }
         } else {
-            await interaction.reply ('No song is currently being played');
+            const song = this.m_playlistService.getCurrentSong();
+            if (song !== null) {
+                await interaction.reply ( { embeds: [Util.songEmbed (song)] } )
+            } else {
+                await interaction.reply ( { content: 'No song is currently being played', ephemeral: true } );
+            }
         }
     }
 
