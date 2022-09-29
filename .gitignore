@@ -5,5 +5,5 @@ dist/
 *.log
 Thumbs.db
 
-# prisma migrations
-prisma/migrations/*
+music/*
+announcers/*
