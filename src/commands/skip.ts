@@ -3,7 +3,7 @@
  * skip the current song
  */
 
-import type { ChatInputCommandInteraction, Client, SlashCommandBuilder } from "discord.js";
+import { ChatInputCommandInteraction, Client, SlashCommandBuilder, VoiceChannel } from "discord.js";
 import { CommandHandler } from "../command";
 import { CommandExecutor } from "../executor";
 import { Autowired } from "../service";
@@ -44,6 +44,17 @@ class SkipCommand extends CommandExecutor {
                     userId
                 }
             });
+            const channel = interaction.channel;
+
+            if (!(channel instanceof VoiceChannel)) {
+                await interaction.reply ({ content: 'Must be used in the voice channel', ephemeral: true })
+                return;
+            }
+
+            if (!channel.members.has (interaction.user.id)) {
+                await interaction.reply ({ content: 'You are not a member of the voice channel', ephemeral: true })
+                return;
+            }
 
             if (force && user !== null && user.canForceSkip) {
                 if (this.m_playlistService.skipCurrentSong ()) {
