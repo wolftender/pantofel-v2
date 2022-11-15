@@ -42,7 +42,7 @@ class RegisterCommand extends CommandExecutor {
         const guildId = interaction.guildId;
         
         if (guildId !== null) {
-            await this.m_databaseService.client.guild.upsert ({
+            await this.m_databaseService.guild.upsert ({
                 where : {
                     guildId
                 },

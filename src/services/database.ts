@@ -13,7 +13,23 @@ export class DatabaseService extends Logging {
         this.m_client = new PrismaClient ();
     }
 
-    public get client () {
+    private get client () {
         return this.m_client;
+    }
+
+    public get guild () {
+        return this.client.guild;
+    }
+
+    public get user () {
+        return this.client.user;
+    }
+
+    public get song () {
+        return this.client.song;
+    }
+
+    public get songRating () {
+        return this.client.songRating;
     }
 }

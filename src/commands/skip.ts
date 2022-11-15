@@ -39,7 +39,7 @@ class SkipCommand extends CommandExecutor {
         const userId = interaction.user.id;
 
         if (song !== null) {  
-            const user = await this.m_databaseService.client.user.findUnique ({
+            const user = await this.m_databaseService.user.findUnique ({
                 where : {
                     userId
                 }

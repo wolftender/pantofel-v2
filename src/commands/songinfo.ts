@@ -37,7 +37,7 @@ class SongInfoCommand extends CommandExecutor {
         const songId = interaction.options.getNumber ('song');
         
         if (songId !== null) {
-            const song = await this.m_databaseService.client.song.findUnique ({
+            const song = await this.m_databaseService.song.findUnique ({
                 where : {
                     songId
                 }
@@ -63,7 +63,7 @@ class SongInfoCommand extends CommandExecutor {
         const input = interaction.options.getFocused ();
 
         if (input.length > 3) {
-            const songs = await this.m_databaseService.client.song.findMany ({
+            const songs = await this.m_databaseService.song.findMany ({
                 where : {
                     OR : [{
                         title : {

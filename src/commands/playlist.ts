@@ -31,7 +31,7 @@ class PlaylistCommand extends CommandExecutor {
         const songIds = this.m_playlistService.getNextSongIDs (5);
         const embed = new EmbedBuilder ();
         for (const songId of songIds) {
-            const song = await this.m_databaseService.client.song.findUnique ({
+            const song = await this.m_databaseService.song.findUnique ({
                 where : {
                     songId
                 }

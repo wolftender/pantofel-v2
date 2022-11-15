@@ -83,7 +83,7 @@ export class PlaylistService extends Logging {
     }
 
     private async shuffle () : Promise<void> {
-        this.m_playlist = (await this.m_databaseService.client.song.findMany ({
+        this.m_playlist = (await this.m_databaseService.song.findMany ({
             select : {
                 songId : true
             }
@@ -108,7 +108,7 @@ export class PlaylistService extends Logging {
                 this.error ('playlist is empty');
                 return;
             }
-            const song = await this.m_databaseService.client.song.findUnique ({
+            const song = await this.m_databaseService.song.findUnique ({
                 where : {
                     songId
                 }
@@ -193,7 +193,7 @@ export class PlaylistService extends Logging {
     }
 
     private async fetchAllChannels () : Promise<VoiceChannel[]> {
-        const guilds = await this.m_databaseService.client.guild.findMany ();
+        const guilds = await this.m_databaseService.guild.findMany ();
         const res : VoiceChannel[] = [];
         for (const dbGuild of guilds) {
             try {

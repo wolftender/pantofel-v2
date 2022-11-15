@@ -66,14 +66,14 @@ class UploadCommand extends CommandExecutor {
             ephemeral : true
         });
 
-        const userEntry = await this.m_databaseService.client.user.findUnique ({
+        const userEntry = await this.m_databaseService.user.findUnique ({
             where : {
                 userId
             }
         });
 
         if (userEntry === null) {
-            await this.m_databaseService.client.user.create ({
+            await this.m_databaseService.user.create ({
                 data : {
                     userId
                 }
@@ -103,7 +103,7 @@ class UploadCommand extends CommandExecutor {
         const coverArt = interaction.options.getAttachment ('cover-art');
         const userId = interaction.user.id;
 
-        const songEntry = await this.m_databaseService.client.song.create ({
+        const songEntry = await this.m_databaseService.song.create ({
             data : {
                 artist,
                 title,
@@ -116,7 +116,7 @@ class UploadCommand extends CommandExecutor {
         
         ffmpeg ()
             .on ('error', async () => {
-                await this.m_databaseService.client.song.delete ({
+                await this.m_databaseService.song.delete ({
                     where : {
                         songId : songEntry.songId
                     }
@@ -157,7 +157,7 @@ class UploadCommand extends CommandExecutor {
             return;
         }
 
-        const songEntry = await this.m_databaseService.client.song.create ({
+        const songEntry = await this.m_databaseService.song.create ({
             data : {
                 artist,
                 title,
@@ -174,7 +174,7 @@ class UploadCommand extends CommandExecutor {
                                     '--audio-format opus ' +
                                     `-x "${url}"`);
 
-            await this.m_databaseService.client.song.update ({
+            await this.m_databaseService.song.update ({
                 where : {
                     songId
                 },
@@ -192,7 +192,7 @@ class UploadCommand extends CommandExecutor {
             this.m_playlistService.addSong (songEntry.songId);
             await interaction.editReply ('Upload successful');
         } catch (error) {
-            await this.m_databaseService.client.song.delete ({
+            await this.m_databaseService.song.delete ({
                 where : {
                     songId
                 }
@@ -235,7 +235,7 @@ class UploadCommand extends CommandExecutor {
             return 'Unknown';
         } else {
             const artists = songDescription.slice (bullet + 2, songDescription.indexOf ('\n', bullet + 1));
-            return artists.replaceAll (' · ', ' + ')
+            return artists.replaceAll (' · ', ' & ')
         }
     }
 }
