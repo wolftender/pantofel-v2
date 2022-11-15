@@ -203,7 +203,7 @@ class UploadCommand extends CommandExecutor {
     }
 
     private verifyURL (url : string) : string | null {
-        const regex = /(https:\/\/)?(www\.|music\.)?youtu(be\.com\/watch\?v=|\.be\/)[a-zA-Z0-9_-]{8,12}\b/
+        const regex = /(https:\/\/)?(www\.|music\.)?youtu(be\.com\/watch\?v=|\.be\/)[a-zA-Z0-9_-]{8,12}(&feature=share)?$/
         if (regex.test (url)) {
             if (url.startsWith ('https://')) {
                 return url;
