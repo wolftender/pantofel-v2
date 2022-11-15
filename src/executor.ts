@@ -3,10 +3,10 @@
  * base classes for command executors
  */
 
-import { SlashCommandBuilder } from "@discordjs/builders";
-import type { AutocompleteInteraction, ButtonInteraction, ChatInputCommandInteraction, Client } from "discord.js";
+import { SlashCommandBuilder } from '@discordjs/builders';
+import type { AutocompleteInteraction, ButtonInteraction, ChatInputCommandInteraction, Client } from 'discord.js';
 
-import { Logging } from "./logger";
+import { Logging } from './logger';
 
 export abstract class CommandExecutor extends Logging {
     private m_name : string;
@@ -36,15 +36,15 @@ export abstract class CommandExecutor extends Logging {
     }
 
     public async command (client : Client, interaction : ChatInputCommandInteraction) : Promise<void> {
-        throw new Error ("this command is not implemented");
+        throw new Error ('this command is not implemented');
     }
 
     public async button (id : string, client : Client, interaction : ButtonInteraction) : Promise<void> {
-        throw new Error ("this button is not implemented");
+        throw new Error ('this button is not implemented');
     }
 
     public async autocomplete (client : Client, interaction : AutocompleteInteraction) : Promise<void> {
-        throw new Error ("this autocomplete is not implemented");
+        throw new Error ('this autocomplete is not implemented');
     }
 }
 

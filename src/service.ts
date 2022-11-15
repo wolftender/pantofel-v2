@@ -4,12 +4,12 @@
  */
 
 import 'reflect-metadata';
-import { Logger, Logging } from "./logger";
+import { Logger } from './logger';
 
 const services : Array <any> = [];
 
 export function Service () {
-    return function <T extends new(...args: {}[]) => any> (target : T) {
+    return function <T extends new (...args : {}[]) => any> (target : T) {
         Logger.logger.info (`registering service ${target.name}`);
 
         const newService : T = new target ();
@@ -52,7 +52,7 @@ export function Autowired (parameters? : AutowiredParameters) {
                     return;
                 }
                 
-                Logger.logger.warning (`no services matching name = "${nameHint}" were found`);
+                Logger.logger.warning (`no services matching name = '${nameHint}' were found`);
             }
     
             if (parameters.class) {
@@ -62,7 +62,7 @@ export function Autowired (parameters? : AutowiredParameters) {
                     return;
                 }
 
-                Logger.logger.warning (`no services matching class = "${hintClass.name}" were found`);
+                Logger.logger.warning (`no services matching class = '${hintClass.name}' were found`);
             }
         }
 

@@ -1,6 +1,6 @@
-import { PrismaClient } from "@prisma/client";
-import { Logging } from "../logger";
-import { Service } from "../service";
+import { PrismaClient } from '@prisma/client';
+import { Logging } from '../logger';
+import { Service } from '../service';
 
 @Service ()
 export class DatabaseService extends Logging {
@@ -9,7 +9,7 @@ export class DatabaseService extends Logging {
     public constructor () {
         super ();
 
-        this.info ("initializing database service");
+        this.info ('initializing database service');
         this.m_client = new PrismaClient ();
     }
 

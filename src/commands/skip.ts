@@ -3,13 +3,13 @@
  * skip the current song
  */
 
-import { ChatInputCommandInteraction, Client, SlashCommandBuilder, VoiceChannel } from "discord.js";
-import { CommandHandler } from "../command";
-import { CommandExecutor } from "../executor";
-import { Autowired } from "../service";
-import { DatabaseService } from "../services/database";
-import { PlaylistService } from "../services/playlist";
-import { Util } from "../util";
+import { ChatInputCommandInteraction, Client, SlashCommandBuilder, VoiceChannel } from 'discord.js';
+import { CommandHandler } from '../command';
+import { CommandExecutor } from '../executor';
+import { Autowired } from '../service';
+import { DatabaseService } from '../services/database';
+import { PlaylistService } from '../services/playlist';
+import { Util } from '../util';
 
 @CommandHandler ()
 class SkipCommand extends CommandExecutor {
@@ -26,7 +26,7 @@ class SkipCommand extends CommandExecutor {
 
     public build () : SlashCommandBuilder {
         return (super.build ()
-            .addBooleanOption(option => option
+            .addBooleanOption (option => option
                 .setName ('force')
                 .setDescription ('force skip without voting (requires special privileges')
                 .setRequired (false))
@@ -40,19 +40,19 @@ class SkipCommand extends CommandExecutor {
 
         if (song !== null) {  
             const user = await this.m_databaseService.client.user.findUnique ({
-                where: {
+                where : {
                     userId
                 }
             });
             const channel = interaction.channel;
 
             if (!(channel instanceof VoiceChannel)) {
-                await interaction.reply ({ content: 'Must be used in the voice channel', ephemeral: true })
+                await interaction.reply ({ content : 'Must be used in the voice channel', ephemeral : true })
                 return;
             }
 
             if (!channel.members.has (interaction.user.id)) {
-                await interaction.reply ({ content: 'You are not a member of the voice channel', ephemeral: true })
+                await interaction.reply ({ content : 'You are not a member of the voice channel', ephemeral : true })
                 return;
             }
 
@@ -61,29 +61,30 @@ class SkipCommand extends CommandExecutor {
                     const { embed, files } = Util.songEmbed (song);
                     embed.setColor ([255, 103, 72])
                          .setDescription ('Force skipped');
-                    await interaction.reply ({ embeds: [embed], files });
+                    await interaction.reply ({ embeds : [embed], files });
                 } else {
-                    await interaction.reply ({ content: 'Failed to skip the song', ephemeral: true });
+                    await interaction.reply ({ content : 'Failed to skip the song', ephemeral : true });
                 }
             } else {
-                const message = await interaction.deferReply({
-                    fetchReply: true
+                const message = await interaction.deferReply ({
+                    fetchReply : true
                 });
                 const { voteCount, userCount } = await this.m_playlistService.voteSkip (userId, message);
-                if (voteCount >= userCount / 2.0) {
+                const targetCount = Math.ceil(userCount / 2.0);
+                if (voteCount >= targetCount) {
                     this.m_playlistService.skipCurrentSong ()
                     const { embed, files } = Util.songEmbed (song);
                     embed.setColor ([255, 103, 72])
                         .setDescription ('Vote skipped');
-                    await interaction.editReply ({ embeds: [embed], files });
+                    await interaction.editReply ({ embeds : [embed], files });
                 } else {
                     await interaction.editReply ({
-                        content: `${voteCount}/${Math.ceil (userCount / 2)}`,
+                        content : `${voteCount}/${targetCount}`,
                     });
                 }
             }
         } else {
-            await interaction.reply ({ content: 'Nothing is being played', ephemeral: true });
+            await interaction.reply ({ content : 'Nothing is being played', ephemeral : true });
         }
     }
 }

@@ -6,17 +6,17 @@
 import { REST } from '@discordjs/rest';
 
 import { Logging } from './logger';
-import type { CommandExecutor } from "./executor";
+import type { CommandExecutor } from './executor';
 
 import * as config from './config.json';
 import { RESTPostAPIApplicationCommandsJSONBody, Routes } from 'discord-api-types/v10';
 import type { AutocompleteInteraction, ButtonInteraction, ChatInputCommandInteraction, Client, GuildManager } from 'discord.js';
 import { Util } from './util';
 
-const commandHandlers : Array <new(...args: {}[]) => CommandExecutor> = [];
+const commandHandlers : Array <new (...args : {}[]) => CommandExecutor> = [];
 
 export function CommandHandler () {
-    return function <T extends new(...args: {}[]) => CommandExecutor> (target : T) {
+    return function <T extends new (...args : {}[]) => CommandExecutor> (target : T) {
         commandHandlers.push (target);
     }
 }
@@ -78,11 +78,11 @@ export class CommandManager extends Logging {
                     this.error (err.stack);
                 }
 
-                await interaction.reply ({ ephemeral: true, content: 'an error has occured while processing your query' });
+                await interaction.reply ({ ephemeral : true, content : 'an error has occured while processing your query' });
             }
         } else {
             this.error (`received command ${commandName} but a handler was not found`);
-            await interaction.reply ({ ephemeral: true, content: 'https://cdn.discordapp.com/attachments/895285228531245106/921914115348381726/aler_copium.gif' });
+            await interaction.reply ({ ephemeral : true, content : 'https://cdn.discordapp.com/attachments/895285228531245106/921914115348381726/aler_copium.gif' });
         }
     }
 
@@ -103,11 +103,11 @@ export class CommandManager extends Logging {
                     this.error (err.stack);
                 }
 
-                await interaction.reply ({ ephemeral: true, content: 'an error has occured while processing your query' });
+                await interaction.reply ({ ephemeral : true, content : 'an error has occured while processing your query' });
             }
         } else {
             this.error (`received interaction ${buttonId} but a handler was not found`);
-            await interaction.reply ({ ephemeral: true, content: 'https://cdn.discordapp.com/attachments/895285228531245106/921914115348381726/aler_copium.gif' });
+            await interaction.reply ({ ephemeral : true, content : 'https://cdn.discordapp.com/attachments/895285228531245106/921914115348381726/aler_copium.gif' });
         }
     }
 
@@ -126,17 +126,17 @@ export class CommandManager extends Logging {
                     this.error (err.stack);
                 }
 
-                await interaction.respond([]);
+                await interaction.respond ([]);
             }
         } else {
             this.error (`received command ${commandName} but a handler was not found`);
-            await interaction.respond([]);
+            await interaction.respond ([]);
         }
     }
 
-    public async buildCommands (clientId : string, guildManager: GuildManager) : Promise <void> {
+    public async buildCommands (clientId : string, guildManager : GuildManager) : Promise <void> {
         const token : string = process.env.DISCORD_TOKEN ? process.env.DISCORD_TOKEN : '';
-        const rest : REST = new REST ({ version: '10' }).setToken (token);
+        const rest : REST = new REST ({ version : '10' }).setToken (token);
 
         try {
             this.info ('refreshing application commands...');
@@ -151,12 +151,12 @@ export class CommandManager extends Logging {
                 this.warning ('the registration process will commence in 5 seconds, terminate the program to stop');
 
                 await Util.wait (5000);
-                await rest.put (Routes.applicationCommands (clientId), { body: commands })
+                await rest.put (Routes.applicationCommands (clientId), { body : commands })
             } else {
                 const guilds = await guildManager.fetch ();
                 for (const [guildId] of guilds) {
                     this.info (`registering commands for guild ${guildId}`);
-                    await rest.put (Routes.applicationGuildCommands (clientId, guildId), { body: commands });
+                    await rest.put (Routes.applicationGuildCommands (clientId, guildId), { body : commands });
                 }
             }
 
