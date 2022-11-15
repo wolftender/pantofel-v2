@@ -8,7 +8,7 @@ import { Autowired, Service } from "../service";
 import { DiscordService } from "./discord";
 import { DatabaseService } from "./database";
 import { joinVoiceChannel, VoiceConnectionStatus, createAudioPlayer, AudioPlayer, NoSubscriberBehavior, createAudioResource, AudioPlayerStatus, AudioResource, getVoiceConnection, VoiceConnection, PlayerSubscription, entersState } from '@discordjs/voice';
-import { Collection, VoiceChannel, VoiceState } from "discord.js";
+import { Message, ActivityOptions, ActivityType, Collection, VoiceChannel, VoiceState } from "discord.js";
 
 import config from '../config.json';
 import { Util } from "../util";
@@ -112,6 +112,8 @@ export class PlaylistService extends Logging {
             resource = createAudioResource (`${config.storage.announcerDirectory}/${Util.randomArrayElement (this.m_announcers)}`);
 
             this.info (`announcing ${this.m_nowPlaying?.songId}.opus`);
+
+            this.m_discordService.client.user?.setActivity ({ type: ActivityType.Listening, name: `${song?.title} by ${song?.artist}`} as ActivityOptions);
         } else {
             resource = createAudioResource (`${config.storage.musicDirectory}/${this.m_nowPlaying?.songId}.opus`);
         }
