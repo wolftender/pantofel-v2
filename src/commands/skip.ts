@@ -47,9 +47,9 @@ class SkipCommand extends CommandExecutor {
 
             if (force && user !== null && user.canForceSkip) {
                 if (this.m_playlistService.skipCurrentSong ()) {
-                    const { embed, files } = Util.songEmbed (song)
-                        .setColor ([255, 103, 72])
-                        .setDescription ('Force skipped');
+                    const { embed, files } = Util.songEmbed (song);
+                    embed.setColor ([255, 103, 72])
+                         .setDescription ('Force skipped');
                     await interaction.reply ({ embeds: [embed], files });
                 } else {
                     await interaction.reply ({ content: 'Failed to skip the song', ephemeral: true });
@@ -61,10 +61,10 @@ class SkipCommand extends CommandExecutor {
                 const { voteCount, userCount } = await this.m_playlistService.voteSkip (userId, message);
                 if (voteCount >= userCount / 2.0) {
                     this.m_playlistService.skipCurrentSong ()
-                    const embed = Util.songEmbed (song)
-                        .setColor ([255, 103, 72])
+                    const { embed, files } = Util.songEmbed (song);
+                    embed.setColor ([255, 103, 72])
                         .setDescription ('Vote skipped');
-                    await interaction.editReply ({ embeds: [embed] });
+                    await interaction.editReply ({ embeds: [embed], files });
                 } else {
                     await interaction.editReply ({
                         content: `${voteCount}/${Math.ceil (userCount / 2)}`,
