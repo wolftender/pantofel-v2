@@ -17,6 +17,7 @@ import './commands/songinfo';
 import './commands/register';
 import './commands/skip';
 import './commands/upload';
+import './commands/playlist'
 
 export class Pantofel extends Logging {
     public static async run () : Promise<void> {

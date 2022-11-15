@@ -265,4 +265,8 @@ export class PlaylistService extends Logging {
             this.play ();
         }
     }
+
+        public getNextSongIDs (count: number) : number[] {
+        return [this.m_nowPlaying?.songId ?? 0, ...this.m_playlist.slice (0, count)];
+    }
 }
