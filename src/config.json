@@ -16,6 +16,7 @@
     "storage": {
         "type": "local",
         "musicDirectory": "./music",
+        "jacketDirectory": "./jackets",
         "announcerDirectory": "./announcers"
     },
 

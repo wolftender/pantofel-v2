@@ -44,16 +44,18 @@ class SongInfoCommand extends CommandExecutor {
                 }
             });
             if (song !== null) {
-                await interaction.reply ( { embeds: [Util.songEmbed (song)] } )
+                const { embed, files } = Util.songEmbed (song);
+                await interaction.reply ({ embeds: [embed], files })
             } else {
-                await interaction.reply ( { content: 'This song does not exist in the database.', ephemeral: true } );
+                await interaction.reply ({ content: 'This song does not exist in the database.', ephemeral: true });
             }
         } else {
             const song = this.m_playlistService.getCurrentSong();
             if (song !== null) {
-                await interaction.reply ( { embeds: [Util.songEmbed (song)] } )
+                const { embed, files } = Util.songEmbed (song);
+                await interaction.reply ({ embeds: [embed], files } )
             } else {
-                await interaction.reply ( { content: 'No song is currently being played', ephemeral: true } );
+                await interaction.reply ({ content: 'No song is currently being played', ephemeral: true });
             }
         }
     }
