@@ -3,7 +3,7 @@
  * skip the current song
  */
 
-import type { ChatInputCommandInteraction, Client, SlashCommandBuilder } from "discord.js";
+import { ChatInputCommandInteraction, Client, SlashCommandBuilder, VoiceChannel } from "discord.js";
 import { CommandHandler } from "../command";
 import { CommandExecutor } from "../executor";
 import { Autowired } from "../service";
@@ -44,26 +44,42 @@ class SkipCommand extends CommandExecutor {
                     userId
                 }
             });
+            const channel = interaction.channel;
+
+            if (!(channel instanceof VoiceChannel)) {
+                await interaction.reply ({ content: 'Must be used in the voice channel', ephemeral: true })
+                return;
+            }
+
+            if (!channel.members.has (interaction.user.id)) {
+                await interaction.reply ({ content: 'You are not a member of the voice channel', ephemeral: true })
+                return;
+            }
 
             if (force && user !== null && user.canForceSkip) {
                 if (this.m_playlistService.skipCurrentSong ()) {
-                    const embed = Util.songEmbed (song)
-                        .setColor ([255, 103, 72])
-                        .setDescription ('Force skipped');
-                    await interaction.reply ({ embeds: [embed] });
+                    const { embed, files } = Util.songEmbed (song);
+                    embed.setColor ([255, 103, 72])
+                         .setDescription ('Force skipped');
+                    await interaction.reply ({ embeds: [embed], files });
                 } else {
                     await interaction.reply ({ content: 'Failed to skip the song', ephemeral: true });
                 }
             } else {
-                const [voteCount, userCount] = await this.m_playlistService.voteSkip (userId);
-                if (voteCount > userCount / 2) {
+                const message = await interaction.deferReply({
+                    fetchReply: true
+                });
+                const { voteCount, userCount } = await this.m_playlistService.voteSkip (userId, message);
+                if (voteCount >= userCount / 2.0) {
                     this.m_playlistService.skipCurrentSong ()
-                    const embed = Util.songEmbed (song)
-                        .setColor ([255, 103, 72])
+                    const { embed, files } = Util.songEmbed (song);
+                    embed.setColor ([255, 103, 72])
                         .setDescription ('Vote skipped');
-                    await interaction.reply ({ embeds: [embed] });
+                    await interaction.editReply ({ embeds: [embed], files });
                 } else {
-                    await interaction.reply (`${voteCount}/${Math.ceil (userCount / 2)}`);
+                    await interaction.editReply ({
+                        content: `${voteCount}/${Math.ceil (userCount / 2)}`,
+                    });
                 }
             }
         } else {

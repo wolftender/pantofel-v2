@@ -14,6 +14,12 @@ import config from '../config.json';
 import { Util } from "../util";
 import fs from 'fs';
 import type { Song } from "@prisma/client";
+import type { UserID } from "../types";
+
+type VoteSkip = {
+    message: Message | null,
+    voted: boolean
+}
 
 @Service ()
 export class PlaylistService extends Logging {
@@ -27,7 +33,7 @@ export class PlaylistService extends Logging {
 
     private m_songCount : number;
     private m_playlist : number[];
-    private m_skipVotes : Set<String>;
+    private m_skipVotes : Map<UserID, VoteSkip>;
     private m_nowPlaying : Song | null;
 
     private m_announcement : boolean;
@@ -62,7 +68,7 @@ export class PlaylistService extends Logging {
 
         this.m_songCount = 0;
         this.m_playlist = [];
-        this.m_skipVotes = new Set ();
+        this.m_skipVotes = new Map ();
         this.m_nowPlaying = null;
 
         this.m_announcement = false;
@@ -107,7 +113,7 @@ export class PlaylistService extends Logging {
                     songId
                 }
             });
-            this.m_skipVotes = new Set ();
+            this.m_skipVotes.clear ();
             this.m_nowPlaying = song;
             resource = createAudioResource (`${config.storage.announcerDirectory}/${Util.randomArrayElement (this.m_announcers)}`);
 
@@ -233,14 +239,11 @@ export class PlaylistService extends Logging {
         }
     }
 
-    /**
-     * @returns `true` if the number of votes has reached the skip threshold
-     */
-    public async voteSkip (userId: string) : Promise<[number, number]> {
+    public async voteSkip (userId: string, message: Message) : Promise<{ voteCount: number, userCount: number }> {
         const song = this.getCurrentSong ();
 
         if (song === null) {
-            return [0, 0];
+            return { voteCount: 0, userCount: 0};
         }
 
         const channels = await this.fetchAllChannels ();
@@ -249,14 +252,28 @@ export class PlaylistService extends Logging {
         for (const channel of channels) {
             userCount += channel.members.size;
         }
+        userCount -= 1; // Exclude self
 
         if (this.m_skipVotes.has (userId)) {
-            this.m_skipVotes.delete (userId);
+            const previousVote = this.m_skipVotes.get (userId)!;
+            if (previousVote.message !== null) {
+                await previousVote.message.delete();
+            }
+            this.m_skipVotes.set (userId, {
+                message,
+                voted: !previousVote.voted
+            });
         } else {
-            this.m_skipVotes.add (userId);
+            this.m_skipVotes.set (userId, {
+                message,
+                voted: true
+            });
         }
 
-        return [this.m_skipVotes.size, userCount];
+        return { 
+            voteCount: Array.from(this.m_skipVotes.values()).filter(vote => vote.voted).length, 
+            userCount 
+        };
     }
 
     public addSong (songId: number) : void {
