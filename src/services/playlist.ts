@@ -8,7 +8,7 @@ import { Autowired, Service } from "../service";
 import { DiscordService } from "./discord";
 import { DatabaseService } from "./database";
 import { joinVoiceChannel, VoiceConnectionStatus, createAudioPlayer, AudioPlayer, NoSubscriberBehavior, createAudioResource, AudioPlayerStatus, AudioResource, getVoiceConnection, VoiceConnection, PlayerSubscription, entersState } from '@discordjs/voice';
-import { ActivityOptions, ActivityType, Collection, VoiceChannel, VoiceState } from "discord.js";
+import { Message, ActivityOptions, ActivityType, Collection, VoiceChannel, VoiceState } from "discord.js";
 
 import config from '../config.json';
 import { Util } from "../util";
