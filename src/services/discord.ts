@@ -3,7 +3,7 @@
  * service that runs the discord bot account
  */
 
-import { ActivityOptions, ActivityType, AutocompleteInteraction, ButtonInteraction, ChatInputCommandInteraction, Client, ClientOptions, CommandInteraction, GatewayIntentBits, Interaction, VoiceChannel, VoiceState } from "discord.js";
+import { AutocompleteInteraction, ButtonInteraction, ChatInputCommandInteraction, Client, ClientOptions, CommandInteraction, GatewayIntentBits, Interaction, VoiceChannel, VoiceState } from "discord.js";
 import { Logging } from "../logger";
 import { Service } from "../service";
 
@@ -38,7 +38,6 @@ export class DiscordService extends Logging {
 
         this.m_client.once ('ready', async () => {
             this.info (`client logged in as ${this.m_client.user?.username}#${this.m_client.user?.discriminator} (${this.m_client.user?.id})`);
-            this.m_client.user?.setActivity ({ type: ActivityType.Streaming, name: config.discord.status } as ActivityOptions);
 
             // initialize command manager and build commands (if asked to by the config)
             this.m_commandManager = new CommandManager ();
