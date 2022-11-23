@@ -27,7 +27,7 @@ export class Logger {
 
     private createLogDirectory () : void {
         if (!fs.existsSync (this.m_logDirectory)) {
-            fs.mkdirSync (this.m_logDirectory, { recursive: true });
+            fs.mkdirSync (this.m_logDirectory, { recursive : true });
         }
     }
 
@@ -67,9 +67,15 @@ export class Logger {
         const formattedMessage : string = `[${timestamp}][${LogLevel[level]}] ${message}`;
 
         switch (level) {
-            case LogLevel.ERROR: console.error (formattedMessage); break;
-            case LogLevel.WARN: console.warn (formattedMessage); break;
-            default: console.log (formattedMessage); break;
+        case LogLevel.ERROR : 
+            console.error (formattedMessage); 
+            break;
+        case LogLevel.WARN : 
+            console.warn (formattedMessage); 
+            break;
+        default : 
+            console.log (formattedMessage); 
+            break;
         }
 
         this.m_outputStream.write (`${formattedMessage}\n`);

@@ -3,12 +3,12 @@
  * show the current playlist
  */
 
-import { ChatInputCommandInteraction, Client, EmbedBuilder, SlashCommandBuilder } from "discord.js";
-import { CommandHandler } from "../command";
-import { CommandExecutor } from "../executor";
-import { Autowired } from "../service";
-import { DatabaseService } from "../services/database";
-import { PlaylistService } from "../services/playlist";
+import { ChatInputCommandInteraction, Client, EmbedBuilder, SlashCommandBuilder } from 'discord.js';
+import { CommandHandler } from '../command';
+import { CommandExecutor } from '../executor';
+import { Autowired } from '../service';
+import { DatabaseService } from '../services/database';
+import { PlaylistService } from '../services/playlist';
 
 @CommandHandler ()
 class PlaylistCommand extends CommandExecutor {
@@ -31,8 +31,8 @@ class PlaylistCommand extends CommandExecutor {
         const songIds = this.m_playlistService.getNextSongIDs (5);
         const embed = new EmbedBuilder ();
         for (const songId of songIds) {
-            const song = await this.m_databaseService.client.song.findUnique ({
-                where: {
+            const song = await this.m_databaseService.song.findUnique ({
+                where : {
                     songId
                 }
             });
@@ -50,7 +50,7 @@ class PlaylistCommand extends CommandExecutor {
              .setColor ('#ef8586');
 
         await interaction.reply ({
-            embeds: [embed]
+            embeds : [embed]
         })
     }
 }

@@ -3,22 +3,22 @@
  * playlist management service
  */
 
-import { Logging } from "../logger";
-import { Autowired, Service } from "../service";
-import { DiscordService } from "./discord";
-import { DatabaseService } from "./database";
+import { Logging } from '../logger';
+import { Autowired, Service } from '../service';
+import { DiscordService } from './discord';
+import { DatabaseService } from './database';
 import { joinVoiceChannel, VoiceConnectionStatus, createAudioPlayer, AudioPlayer, NoSubscriberBehavior, createAudioResource, AudioPlayerStatus, AudioResource, getVoiceConnection, VoiceConnection, PlayerSubscription, entersState } from '@discordjs/voice';
-import { Message, ActivityOptions, ActivityType, Collection, VoiceChannel, VoiceState } from "discord.js";
+import { Message, ActivityOptions, ActivityType, Collection, VoiceChannel, VoiceState } from 'discord.js';
 
 import config from '../config.json';
-import { Util } from "../util";
+import { Util } from '../util';
 import fs from 'fs';
-import type { Song } from "@prisma/client";
-import type { UserID } from "../types";
+import type { Song } from '@prisma/client';
+import type { UserID } from '../types';
 
 type VoteSkip = {
-    message: Message | null,
-    voted: boolean
+    message : Message | null,
+    voted : boolean
 }
 
 @Service ()
@@ -46,8 +46,8 @@ export class PlaylistService extends Logging {
         super ();
         this.info ('initializing playlist manager service');
         this.m_audioPlayer = createAudioPlayer ({
-            behaviors: {
-                noSubscriber: NoSubscriberBehavior.Pause,
+            behaviors : {
+                noSubscriber : NoSubscriberBehavior.Pause,
             },
         });
 
@@ -59,9 +59,9 @@ export class PlaylistService extends Logging {
             this.play ();
         });
 
-        this.m_discordService.client.on ("voiceStateUpdate", this.channelEvent.bind(this));
+        this.m_discordService.client.on ('voiceStateUpdate', this.channelEvent.bind (this));
 
-        this.m_discordService.client.once ("ready", () => {
+        this.m_discordService.client.once ('ready', () => {
             this.connectAll ();
             this.play ();
         });
@@ -82,34 +82,34 @@ export class PlaylistService extends Logging {
 
     }
 
-    private async shuffle (): Promise<void> {
-        this.m_playlist = (await this.m_databaseService.client.song.findMany ({
-            select: {
-                songId: true
+    private async shuffle () : Promise<void> {
+        this.m_playlist = (await this.m_databaseService.song.findMany ({
+            select : {
+                songId : true
             }
         })).map (song => song.songId);
         this.m_songCount = this.m_playlist.length;
-        Util.shuffle(this.m_playlist);
+        Util.shuffle (this.m_playlist);
         this.info (`playlist shuffled: ${this.m_playlist.length} songs`);
     }
 
-    private getListenerCount (channel : VoiceChannel): number {
+    private getListenerCount (channel : VoiceChannel) : number {
         return channel.members.size - 1;
     }
 
-    public async play (): Promise<void> {
+    public async play () : Promise<void> {
         let resource : AudioResource;
         if (this.m_announcement) {
             if (this.m_playlist.length === 0) {
                 await this.shuffle ();
             }
-            const songId = this.m_playlist.shift();
+            const songId = this.m_playlist.shift ();
             if (songId === undefined) {
                 this.error ('playlist is empty');
                 return;
             }
-            const song = await this.m_databaseService.client.song.findUnique({
-                where: {
+            const song = await this.m_databaseService.song.findUnique ({
+                where : {
                     songId
                 }
             });
@@ -119,26 +119,26 @@ export class PlaylistService extends Logging {
 
             this.info (`announcing ${this.m_nowPlaying?.songId}.opus`);
 
-            this.m_discordService.client.user?.setActivity ({ type: ActivityType.Listening, name: `${song?.title} by ${song?.artist}`} as ActivityOptions);
+            this.m_discordService.client.user?.setActivity ({ type : ActivityType.Listening, name: `${song?.title} by ${song?.artist}`} as ActivityOptions);
         } else {
             resource = createAudioResource (`${config.storage.musicDirectory}/${this.m_nowPlaying?.songId}.opus`);
         }
 
-        this.m_audioPlayer.play(resource);
+        this.m_audioPlayer.play (resource);
 
         if (this.m_announcement) {
             if (this.m_nowPlaying !== null) {
-                const embed = Util.songEmbed (this.m_nowPlaying);
-                embed.setFooter({ text: `${this.m_songCount - this.m_playlist.length}/${this.m_songCount}` });
+                const { embed, files } = Util.songEmbed (this.m_nowPlaying);
+                embed.setFooter ({ text : `${this.m_songCount - this.m_playlist.length}/${this.m_songCount}` });
                 const channels = await this.fetchAllChannels ();
                 for (const channel of channels) {
-                    channel.send ({ embeds: [embed] });
+                    channel.send ({ embeds : [embed], files });
                 }
             }
         }
 
         try {
-            await entersState(this.m_audioPlayer, AudioPlayerStatus.Playing, 5_000);
+            await entersState (this.m_audioPlayer, AudioPlayerStatus.Playing, 5_000);
             this.m_announcement = !this.m_announcement;
         } catch (error) {
             this.error (error as string);
@@ -175,21 +175,16 @@ export class PlaylistService extends Logging {
     }
 
     public connect (channel : VoiceChannel) : void {
-        const connection = joinVoiceChannel({
-            channelId: channel.id,
-            guildId: channel.guild.id,
-            adapterCreator: channel.guild.voiceAdapterCreator
+        const connection = joinVoiceChannel ({
+            channelId : channel.id,
+            guildId : channel.guild.id,
+            adapterCreator : channel.guild.voiceAdapterCreator
         })
 
         connection.on (VoiceConnectionStatus.Disconnected, () => {
-            setTimeout(() => {
-                this.connect(channel);
+            setTimeout (() => {
+                this.connect (channel);
             }, config.player.rejoinDelay)
-        });
-
-        connection.on ('stateChange', (previousState, currentState) => {
-            // this.info (`connection to ${channel.name} (${channel.guild.name}) `
-            // + `changed from ${previousState.status} to ${currentState.status}`);
         });
 
         if (this.getListenerCount (channel) > 0) {
@@ -198,7 +193,7 @@ export class PlaylistService extends Logging {
     }
 
     private async fetchAllChannels () : Promise<VoiceChannel[]> {
-        const guilds = await this.m_databaseService.client.guild.findMany();
+        const guilds = await this.m_databaseService.guild.findMany ();
         const res : VoiceChannel[] = [];
         for (const dbGuild of guilds) {
             try {
@@ -215,7 +210,7 @@ export class PlaylistService extends Logging {
     }
 
     private async connectAll () : Promise<void> {
-        const channels = await this.fetchAllChannels();
+        const channels = await this.fetchAllChannels ();
         for (const channel of channels) {
             this.connect (channel);
         }
@@ -239,11 +234,11 @@ export class PlaylistService extends Logging {
         }
     }
 
-    public async voteSkip (userId: string, message: Message) : Promise<{ voteCount: number, userCount: number }> {
+    public async voteSkip (userId : string, message: Message) : Promise<{ voteCount : number, userCount: number }> {
         const song = this.getCurrentSong ();
 
         if (song === null) {
-            return { voteCount: 0, userCount: 0};
+            return { voteCount : 0, userCount: 0};
         }
 
         const channels = await this.fetchAllChannels ();
@@ -257,26 +252,26 @@ export class PlaylistService extends Logging {
         if (this.m_skipVotes.has (userId)) {
             const previousVote = this.m_skipVotes.get (userId)!;
             if (previousVote.message !== null) {
-                await previousVote.message.delete();
+                await previousVote.message.delete ();
             }
             this.m_skipVotes.set (userId, {
                 message,
-                voted: !previousVote.voted
+                voted : !previousVote.voted
             });
         } else {
             this.m_skipVotes.set (userId, {
                 message,
-                voted: true
+                voted : true
             });
         }
 
         return { 
-            voteCount: Array.from(this.m_skipVotes.values()).filter(vote => vote.voted).length, 
+            voteCount : Array.from (this.m_skipVotes.values ()).filter (vote => vote.voted).length, 
             userCount 
         };
     }
 
-    public addSong (songId: number) : void {
+    public addSong (songId : number) : void {
         this.m_playlist.unshift (songId);
         this.m_songCount++;
 
@@ -285,7 +280,7 @@ export class PlaylistService extends Logging {
         }
     }
 
-        public getNextSongIDs (count: number) : number[] {
+    public getNextSongIDs (count : number) : number[] {
         return [this.m_nowPlaying?.songId ?? 0, ...this.m_playlist.slice (0, count)];
     }
 }

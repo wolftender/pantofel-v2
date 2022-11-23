@@ -3,12 +3,12 @@
  * service that runs the discord bot account
  */
 
-import { AutocompleteInteraction, ButtonInteraction, ChatInputCommandInteraction, Client, ClientOptions, CommandInteraction, GatewayIntentBits, Interaction, VoiceChannel, VoiceState } from "discord.js";
-import { Logging } from "../logger";
-import { Service } from "../service";
+import { AutocompleteInteraction, ButtonInteraction, ChatInputCommandInteraction, Client, ClientOptions, CommandInteraction, GatewayIntentBits, Interaction, VoiceChannel, VoiceState } from 'discord.js';
+import { Logging } from '../logger';
+import { Service } from '../service';
 
 import config from '../config.json';
-import { CommandManager } from "../command";
+import { CommandManager } from '../command';
 
 @Service ()
 export class DiscordService extends Logging {
@@ -18,11 +18,11 @@ export class DiscordService extends Logging {
 
     public constructor () {
         super ();
-        this.info ("initializing discord service");
+        this.info ('initializing discord service');
 
         // initialize the client
         this.m_client = new Client ({
-            intents: [
+            intents : [
                 GatewayIntentBits.GuildMessages,
                 GatewayIntentBits.Guilds,
                 GatewayIntentBits.GuildVoiceStates
@@ -44,18 +44,9 @@ export class DiscordService extends Logging {
             if (config.commands.register && this.m_client.user) {
                 await this.m_commandManager.buildCommands (this.m_client.user.id, this.m_client.guilds);
             }
-
-            for (const guild of await this.m_client.guilds.fetch()) {
-               
-            }
-
-            const channel = await this.m_client.channels.fetch ('964890696391745616');
-            if (channel !== null && channel instanceof VoiceChannel) {
-                // this.m_playlistService.connect (channel);
-            }
         });
 
-        this.m_client.on ("interactionCreate", async (interaction : Interaction) => {
+        this.m_client.on ('interactionCreate', async (interaction : Interaction) => {
             if (interaction.isChatInputCommand ()) {
                 this.info (`received command ${interaction.commandName} from ${interaction.user.id}`);
                 this.m_commandManager.handleCommand (this.m_client, interaction as ChatInputCommandInteraction);
